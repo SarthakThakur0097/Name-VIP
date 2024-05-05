@@ -24,13 +24,14 @@ def read_names_from_excel(file_path, sheet_name, first_name_column, last_name_co
     return names
 
 # Check if snippet contains any of the specified keywords
-def calculate_keywords_in_snippet(snippet, keywords):
+def check_keywords_in_snippet(snippet, keywords):
     unique_keywords = set()
     for keyword in keywords:
-        if re.search(r'\b' + re.escape(keyword.lower()) + r'\b', snippet.lower()):
+        if re.search(r'\b' + re.escape(keyword.lower()) + r'(\.|)\s?\b', snippet.lower()):
             unique_keywords.add(keyword)
             print(f"Keyword found: {keyword}")
-    return len(unique_keywords)
+    return unique_keywords
+
 
 def get_instagram_followers(snippet):
     followers = re.findall(r'(\d+(?:\.\d+)?[mMkK]?)\s*followers', snippet, re.IGNORECASE)
@@ -51,62 +52,37 @@ def calculate_vip_status(name, search_results, general_keywords, doctor_keywords
     vip_status = 0
     links = []
     if search_results:
-        vip_count = 0
         instagram_followers = 0
-        keyword_count_general = 0
-        keyword_count_doctor = 0
-        unique_keywords = set()
+        unique_general_keywords = set()
+        unique_doctor_keywords = set()
         for result in search_results:
             snippet = result.get('snippet', '')
             link = result['link']
             print(f"Snippet: {snippet}...\nLink: {link}\n")
             # Check if snippet contains any of the specified keywords
-            keyword_count_general += calculate_keywords_in_snippet(snippet, general_keywords)
-            keyword_count_doctor = max(keyword_count_doctor, calculate_keywords_in_snippet(snippet, doctor_keywords))
-            unique_keywords.update(set(general_keywords).intersection(snippet.lower().split()))
-            unique_keywords.update(set(doctor_keywords).intersection(snippet.lower().split()))
+            unique_general_keywords.update(check_keywords_in_snippet(snippet, general_keywords))
+            unique_doctor_keywords.update(check_keywords_in_snippet(snippet, doctor_keywords))
             followers_count = get_instagram_followers(snippet)
-            if followers_count >= 100000 and len(unique_keywords) >= 2:
-                vip_count += 1
-                print(f"{name} - 100k or more followers and 2 or more general keywords: {', '.join(unique_keywords)}")
-            elif followers_count >= 100000:
-                vip_count += 1
-                print(f"{name} - 100k or more followers")
-            elif len(unique_keywords) >= 2:
-                vip_count += 1
-                print(f"{name} - 2 or more general keywords: {', '.join(unique_keywords)}")
-            elif keyword_count_doctor >= 2:
-                vip_count += 1
-                print(f"{name} - 2 or more doctor-related keywords: {', '.join(unique_keywords)}")
-            elif keyword_count_doctor == 1:
-                vip_count += 1
-                print(f"{name} - 1 doctor-related keyword: {', '.join(unique_keywords)}")
             links.append(link)
             instagram_followers = max(instagram_followers, followers_count)
 
-        if vip_count >= 2 and keyword_count_doctor >= 2:
-            vip_status = 5
-            print(f"{name} - VIP Status 5: 2 or more doctor-related keywords and 100k or more followers")
-        elif vip_count >= 2:
-            vip_status = 5
-            print(f"{name} - VIP Status 5: 2 or more keywords")
-        elif vip_count == 1 and keyword_count_doctor >= 1:
-            vip_status = 4
-            print(f"{name} - VIP Status 4: 1 doctor-related keyword")
-        elif vip_count == 1:
+        if len(unique_general_keywords) >= 2:
             vip_status = 1
-            print(f"{name} - VIP Status 1: 2 or more keywords")
-        elif instagram_followers >= 100000:
+            print(f"{name} - VIP Status 1: 2 or more general keywords")
+        if instagram_followers >= 100000:
+            print("100k+ followers")
             vip_status = 2
-            print(f"{name} - VIP Status 2: 100k or more followers")
-        elif vip_count >= 2:
+        if instagram_followers >= 100000 and len(unique_general_keywords) >= 2:
             vip_status = 3
-            print(f"{name} - VIP Status 3: 100k or more followers and 2 or more keywords")
-        else:
-            vip_status = 0
-            print(f"{name} - VIP Status 0: Not a VIP")
+        if instagram_followers >= 100000 and len(unique_doctor_keywords) == 1:
+            vip_status = 4
+        if instagram_followers >= 100000 and len(unique_doctor_keywords) >= 2:
+            vip_status = 5
+    else:
+        print(f"{name} - VIP Status 0: Not a VIP")
     print(f"{name}, VIP Status: {vip_status}")
     return vip_status, links
+
 
 # Example usage
 file_path = r"famous_people.xlsx"  # Use raw string literal
@@ -114,9 +90,9 @@ sheet_name = "Sheet1"  # Change to the name of your sheet
 first_name_column = "First Name"   # Change to the name of the column containing first names
 middle_name_column = "Middle Name"   # Change to the name of the column containing middle names
 last_name_column = "Last Name"     # Change to the name of the column containing last names
-api_key = "AIzaSyCYAkys1UQKqA9a0J0Mn-n2neAouJV6u8Q"
-cx = "100e27accefea433f"
-general_keywords = ["CEO", "Founder", "Co-founder", "provider", "Celebrity", "Chief Executive Officer", "President", "Entrepreneur"]
+api_key = "AIzaSyDQVEHz8Q1v8qLwbZYQ1FlouAg_cl48DnM"
+cx="b2cbdc2f433354307"
+general_keywords = ["CEO", "Founder", "Co-founder", "President", "Celebrity", "Chief Executive Officer", "Entrepreneur"]
 doctor_keywords = ["Doctor", "Doc", "dr.", "Chief", "Board Certified", "MD", "Radiologist", "researcher", "crunchbase", "zocdoc", "physician"]
 
 # Read names from Excel sheet
