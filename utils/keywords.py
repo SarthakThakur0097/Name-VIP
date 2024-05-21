@@ -5,5 +5,4 @@ def check_keywords_in_snippet(snippet, keywords):
     for keyword in keywords:
         if re.search(r'\b' + re.escape(keyword.lower()) + r'(\.|)\s?\b', snippet.lower()):
             unique_keywords.add(keyword)
-            print(f"Keyword found: {keyword}")
     return unique_keywords
