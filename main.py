@@ -27,6 +27,7 @@ results_df = pd.DataFrame(columns=["Name", "VIP", "Link 1", "Link 2", "Link 3", 
 
 # Search for LinkedIn profiles for each name
 for name in names:
+    
     search_results = search_results_by_name(name, api_key, cx)
     vip_status, links = calculate_vip_status(name, search_results, general_keywords, doctor_keywords)
     results_df = pd.concat([results_df, pd.DataFrame({"Name": [name], "VIP": [vip_status], "Link 1": [links[0] if len(links) > 0 else ""], "Link 2": [links[1] if len(links) > 1 else ""], "Link 3": [links[2] if len(links) > 2 else ""], "Link 4": [links[3] if len(links) > 3 else ""], "Link 5": [links[4] if len(links) > 4 else ""]})], ignore_index=True)
